@@ -3,23 +3,47 @@
   <head>
     <title>Weather App</title>
     <meta charset="utf-8" />
-
-    <!-- Sets CSS-->
-    <link rel="stylesheet" href="styles.css" />
     <meta
       name="viewport"
       content="width=device-width, initial-scale=1, maximum-scale=1"
     />
+    
+    <!-- Favicon url: http://openweathermap.org/img/wn/02d@2x.png-->
+
+    <!-- Sets CSS-->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0-beta2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-BmbxuPwQa2lc/FVzBcNJ7UAyJxM6wuqIj61tLrc4wSX0szH/Ev+nYRRuWlolflfl" crossorigin="anonymous"/>
+    <link href="styles.css" rel="stylesheet">
+  </head>
+
+    
+  <body>
+    <!--
+      TODO
+      Add F and C functionality
+      Add Image Outputs for style
+      Add loading Icon
+    -->
+    
+    <header>
+      <nav>
+
+      </nav>
+    </header>
+
+    <main>
+      <form onsubmit="return false">
+        <label for="location">Location:</label>
+        <input id="location" />
+        <button>Submit</button>
+      </form>
+      <div id="forecastDisplay"></div>
+    </main>
+
+    <footer></footer>
 
     <script src="http://code.jquery.com/jquery-1.11.1.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0-beta2/dist/js/bootstrap.bundle.min.js" integrity="sha384-b5kHyXgcpbZJO/tY9Ul7kGkf1S0CWuKcCD38l8YkeH8z8QjE0GmW1gYU5S9FOnJ0" crossorigin="anonymous"></script>
     <script src="config.js"></script>
     <script src="index.js" defer></script>
-  </head>
-  <body>
-    <form onsubmit="return false">
-      <label for="location">Location:</label>
-      <input id="location" />
-      <button>Submit</button>
-    </form>
   </body>
 </html>
