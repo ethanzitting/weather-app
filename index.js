@@ -200,14 +200,14 @@ async function presentForecast () {
   try {
     // Print all the relevant data to the DOM
     currentDisplay.innerHTML = `<h3>${cityForecast.city}, ${cityForecast.country}</h3><br>
-    <img src="http://openweathermap.org/img/wn/${cityForecast.days[0].icon}@2x.png" class="current-icon" alt="current weather icon"><br>
+    <img src="https://openweathermap.org/img/wn/${cityForecast.days[0].icon}@2x.png" class="current-icon" alt="current weather icon"><br>
     ${cityForecast.currentTemp}${userUnit} ${cityForecast.days[0].clouds}<br>
     High: ${cityForecast.days[0].max}${userUnit}<br>Low: ${cityForecast.days[0].min}${userUnit}<br>
     `
     for (let i = 1; i < cityForecast.days.length; i++) {
       weekDisplay.innerHTML += `
       <div class="card text-center" style="width: 150px">
-        <img src="http://openweathermap.org/img/wn/${cityForecast.days[i].icon}@2x.png" class="card-img-top week-icon" alt="weather icon"/>
+        <img src="https://openweathermap.org/img/wn/${cityForecast.days[i].icon}@2x.png" class="card-img-top week-icon" alt="weather icon"/>
         <div class="card-body">
           <h5 class="card-title">${cityForecast.days[i].thisDay}</h5>
           <p class="card-subtitle">${cityForecast.days[i].clouds}</p>
