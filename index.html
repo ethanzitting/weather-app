@@ -25,6 +25,7 @@
     <!--
       TODO
       Add F and C functionality
+      Add cookie to remember unit decision.
       Add Image Outputs for style
       Add loading Icon
       Dark theme?
@@ -34,6 +35,15 @@
       <nav class="navbar navbar-expand-md navbar-light bg-light sticky-top">
         <div class="container-fluid">
           <a href="index.html" class="navbar-brand">Weather App</a>
+          <li class="nav-item dropdown">
+            <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+              <span id="unitDisplay">Fahrenheit</span>
+            </a>
+            <ul class="dropdown-menu" aria-labelledby="navbarDropdown">
+              <li><a class="dropdown-item active" id="fahBtn" href="#">Fahrenheit</a></li>
+              <li><a class="dropdown-item" id="celBtn" href="#">Celsius</a></li>
+            </ul>
+          </li>
 
           <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
             <span class="navbar-toggler-icon"></span>
