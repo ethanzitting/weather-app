@@ -6,8 +6,45 @@ li {
   list-style-type: none;
 }
 
+a:hover, a:active, a:visited, a:focus {
+  text-decoration: none;
+  color: inherit;
+}
 
 /* header */
 .dropdown-toggle {
   color: inherit;
+}
+
+#forecastSubmit {
+  margin-top: 6%;
+}
+
+.week-display {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.week-icon {
+  height: 100px !important;
+  width: 100px !important;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.space-top {
+  margin-top: 20px
+}
+
+.space-bottom {
+  margin-bottom: 20px;
+}
+
+.card-body {
+  padding: 0;
+}
+
+.card {
+  border: none;
 }

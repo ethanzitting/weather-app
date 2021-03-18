@@ -1,10 +1,56 @@
-// Check user cookies to determine initial units and theme, and most recent city search
-let userUnit = "F";
-let theme = "light";
-let recentCity = 'Colorado Springs'
+/* eslint-disable prefer-const */
+/* eslint-disable semi */
+
+// Gets a specific cookie from the browser storage and returns it's value alone as a string.
+function getCookie(cname) {
+  let name = cname + '=';
+  let decodedCookie = decodeURIComponent(document.cookie);
+  let ca = decodedCookie.split(';');
+  for (let i = 0; i <ca.length; i++) {
+    let c = ca[i];
+    while (c.charAt(0) == ' ') {
+      c = c.substring(1);
+    }
+    if (c.indexOf(name) == 0) {
+      console.log(`Cookie Found.`);
+      return c.substring(name.length, c.length);
+    }
+  }
+  console.log('Cookie Not Found.');
+  return ''
+}
+
+// Creates or overrides a cookie based on your provided inputs.
+function setCookie(cname, cvalue) {
+  let d = new Date();
+  d.setTime(d.getTime() + (600 * 24 * 60 * 60 * 1000));
+  let expires = 'expires='+d.toUTCString();
+  document.cookie = cname + '=' + cvalue + ';' + expires + ';path=/';
+  console.log('Cookie Set.');
+}
+
+// Uses getCoookie and setCookie to check for a cookie's value, and create it if there's not one.
+const ensureCookie = (cname, cvalue) => {
+  let outputValue;
+  if (getCookie(cname) !== '') {
+    outputValue = getCookie(cname);
+  } else {
+    outputValue = cvalue;
+    setCookie(cname, cvalue);
+  }
+
+  return outputValue;
+}
+
+// Check if cookies exist for these three vars, adding defauts if not.
+let userUnit = ensureCookie('userUnit', 'F');
+let theme = ensureCookie('theme', 'light');
+let recentCity = ensureCookie('recentCity', 'Colorado Springs');
+
+// change classes according to default theme
 
 // Global scope object for weather data.
-let cityForecast
+let cityForecast = false;
 
 // Get the button element
 const forecastSubmit = document.querySelector('#forecastSubmit')
@@ -21,17 +67,59 @@ const toFah = (numberInput) => {
 
 // Make clicking submit search for the city in the input cell.
 forecastSubmit.addEventListener('click', async function () {
-
   const cityName = document.querySelector('#location').value
 
-  // Ask the API for the city weather data
-  cityForecast = await getForecast(cityName);
+  if (cityName) {
+    let apiSuccess = false;
+    // Ask the API for the city weather data
+    try {
+      cityForecast = await getForecast(cityName);
+      apiSuccess = true;
+    } catch {
+      apiSuccess = false;
+      console.log('Failed to getForecast();');
+    }
 
+    if (apiSuccess) {
+      console.log(cityForecast);
+      // Update the recentCity cookie and variable
+      setCookie('recentCity', cityName);
+      recentCity = cityName;
+
+      // Convert the temps to the user's chosen unit
+      convertTemps();
+
+      // Print to DOM
+      await presentForecast(cityForecast)
+    } else {
+      console.log('failure');
+    }
+  }
+
+  // Reset input field.
+  document.querySelector('#location').value = '';
+})
+
+// Load the default city weather data.
+const firstLoad = async () => {
+  // Set Units in Header
+  if (userUnit === 'F') {
+    document.querySelector('#unitDisplay').textContent = 'Fahrenheit';
+  } else if (userUnit === 'C') {
+    document.querySelector('#unitDisplay').textContent = 'Celsius';
+  } else {
+    console.log('Error access userUnit in FirstLoad();');
+  }
+
+  // Ask the API for the city weather data
+  cityForecast = await getForecast(recentCity);
+
+  // Convert the temps to the user's chosen unit
   convertTemps();
 
-  // Convert to userUnit and print to DOM
+  // Print to DOM
   await presentForecast(cityForecast)
-})
+}
 
 // Make changing units search refresh weather data and print new data in correct units to DOM
 // Get unit DOM elements
@@ -40,15 +128,16 @@ const celBtn = document.querySelector('#celBtn');
 const unitDisplay = document.querySelector('#unitDisplay');
 
 fahBtn.addEventListener('click', async () => {
-  if (userUnit === "C") {
+  if (userUnit === 'C') {
     // Change fahBtn styling to active
     fahBtn.classList.add('active');
-    unitDisplay.textContent = "Fahrenheit";
+    unitDisplay.textContent = 'Fahrenheit';
     // Change celBtn styling to inactive
     celBtn.classList.remove('active');
 
     // Change userUnit cookie to "F"
-    userUnit = "F";
+    setCookie('userUnit', 'F');
+    userUnit = 'F';
 
     // If the user has weather data already present in the program...
     // Refresh weather data and print it to DOM
@@ -65,12 +154,13 @@ fahBtn.addEventListener('click', async () => {
 celBtn.addEventListener('click', async () => {
   // Change celBtn styling to active
   celBtn.classList.add('active');
-  unitDisplay.textContent = "Celsius";
+  unitDisplay.textContent = 'Celsius';
   // Change fahBtn styling to inactive
   fahBtn.classList.remove('active');
 
   // Change userUnit cookie to "C"
-  userUnit = "C";
+  await setCookie('userUnit', 'C');
+  userUnit = 'C';
 
   // If the user has weather data already present in the program...
   // Refresh weather data and print it to DOM
@@ -83,9 +173,9 @@ celBtn.addEventListener('click', async () => {
   }
 })
 
-function convertTemps() {
+function convertTemps () {
   // If user has Celsius selected, convert temps from K to C, otherwise convert to F
-  if (userUnit === "C") {
+  if (getCookie('userUnit') === 'C') {
     cityForecast.currentTemp = toCel(cityForecast.currentTempK);
     for (let i = 0; i < cityForecast.days.length; i++) {
       cityForecast.days[i].max = toCel(cityForecast.days[i].maxK);
@@ -103,17 +193,27 @@ function convertTemps() {
 // Takes retrieved weather data and displays it in the DOM
 async function presentForecast () {
   // Get the value that the user has input
-  const forecastDisplay = document.querySelector('#forecastDisplay')
+  const weekDisplay = document.querySelector('.week-display');
+  const currentDisplay = document.querySelector('.current-display')
+  weekDisplay.innerHTML = '';
 
   try {
     // Print all the relevant data to the DOM
-    forecastDisplay.innerHTML = `City: ${cityForecast.city}<br>
-    Currently: ${cityForecast.days[0].thisDay}, ${cityForecast.currentTemp} ${userUnit}, ${cityForecast.days[0].clouds}<br>
-    Today: High: ${cityForecast.days[0].max} ${userUnit}, Low: ${cityForecast.days[0].min} ${userUnit}<br>
+    currentDisplay.innerHTML = `<h3>${cityForecast.city}, ${cityForecast.country}</h3><br>
+    <img src="http://openweathermap.org/img/wn/${cityForecast.days[0].icon}@2x.png" class="current-icon" alt="current weather icon"><br>
+    ${cityForecast.currentTemp}${userUnit} ${cityForecast.days[0].clouds}<br>
+    High: ${cityForecast.days[0].max}${userUnit}<br>Low: ${cityForecast.days[0].min}${userUnit}<br>
     `
     for (let i = 1; i < cityForecast.days.length; i++) {
-      forecastDisplay.innerHTML += `
-        ${cityForecast.days[i].thisDay}, High: ${cityForecast.days[i].max} ${userUnit}, Low: ${cityForecast.days[i].min} ${userUnit}, ${cityForecast.days[i].clouds}<br>
+      weekDisplay.innerHTML += `
+      <div class="card text-center" style="width: 150px">
+        <img src="http://openweathermap.org/img/wn/${cityForecast.days[i].icon}@2x.png" class="card-img-top week-icon" alt="weather icon"/>
+        <div class="card-body">
+          <h5 class="card-title">${cityForecast.days[i].thisDay}</h5>
+          <p class="card-subtitle">${cityForecast.days[i].clouds}</p>
+          <p class="card-text">High: ${cityForecast.days[i].max}${userUnit}<br>Low: ${cityForecast.days[i].min}${userUnit}</p>
+        </div>
+      </div>
       `
     }
   } catch (e) {
@@ -147,6 +247,7 @@ const getForecast = async (inputCity) => {
     .then((response) => {
       responseObject.lat = response.coord.lat
       responseObject.lon = response.coord.lon
+      responseObject.country = response.sys.country
     })
 
   // Punch the input city into an API request, using lat and lon
@@ -158,7 +259,6 @@ const getForecast = async (inputCity) => {
   )
     .then(response => response.json())
     .then((response) => {
-      console.log(response)
       // Figure out what today is and store it in a variable.
       const today = new Date()
       const day = today.getDay()
@@ -177,8 +277,15 @@ const getForecast = async (inputCity) => {
 
         // Also process and store the weather data for today and the next 6 days.
         responseObject.days[i].thisDay = thisDay
-        responseObject.days[i].clouds = response.daily[i].weather[0].description
         responseObject.days[i].icon = response.daily[i].weather[0].icon
+        responseObject.days[i].clouds = response.daily[i].weather[0].description
+
+        // Capitalize the first letter in every Word
+        const words = responseObject.days[i].clouds.split(' ');
+        for (let j = 0; j < words.length; j++) {
+          words[j] = words[j][0].toUpperCase() + words[j].substr(1)
+        }
+        responseObject.days[i].clouds = words.join(' ');
 
         // Store numberical data in Kelvin Units
         responseObject.currentTempK = response.current.temp
@@ -194,3 +301,5 @@ const getForecast = async (inputCity) => {
   // Return the weather data
   return responseObject
 }
+
+firstLoad();

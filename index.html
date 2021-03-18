@@ -24,11 +24,9 @@
   <body>
     <!--
       TODO
-      Add F and C functionality
-      Add cookie to remember unit decision.
-      Add Image Outputs for style
+      Fix broken hamburger bar on mobile
       Add loading Icon
-      Dark theme?
+      Dark theme
     -->
     
     <header>
@@ -37,10 +35,10 @@
           <a href="index.html" class="navbar-brand">Weather App</a>
           <li class="nav-item dropdown">
             <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-              <span id="unitDisplay">Fahrenheit</span>
+              <span id="unitDisplay">Select Unit</span>
             </a>
             <ul class="dropdown-menu" aria-labelledby="navbarDropdown">
-              <li><a class="dropdown-item active" id="fahBtn" href="#">Fahrenheit</a></li>
+              <li><a class="dropdown-item" id="fahBtn" href="#">Fahrenheit</a></li>
               <li><a class="dropdown-item" id="celBtn" href="#">Celsius</a></li>
             </ul>
           </li>
@@ -66,17 +64,49 @@
     </header>
 
     <main>
-      <form onsubmit="return false">
-        <label for="location">Location:</label>
-        <input id="location" />
-        <button id="forecastSubmit">Submit</button>
-      </form>
-      <div id="forecastDisplay"></div>
+      <div class="container-fluid">
+        <div class="row">
+          <div class="container">
+            <form onsubmit="return false">
+              <div class="row space-top">
+                <div class="col-1 col-md-3"></div>
+
+                <div class="col-7 col-md-3">
+                  <div class="form-floating mb-5">
+                    <input class="form-control" id="location" placeholder="City Name" required/>
+                    <label for="location">City Name</label>
+                  </div>
+                </div>
+
+                <div class="col-3 col-md-2">
+                  <button class="btn btn-primary" id="forecastSubmit">Submit</button>
+                </div>
+
+                <div class="col-1 col-md-2"></div>
+              </div>
+            </form>
+          </div>
+        </div>
+
+        <div class="row">
+          <div class="container">
+            <div class="row">
+              <div class="container current-display text-center">
+
+              </div>
+              <hr class="space-top space-bottom">
+            </div>
+            <div class="container week-display flex space-bottom">
+
+            </div>
+          </div>
+        </div>
+      </div>
     </main>
 
     <footer></footer>
 
-    <script src="http://code.jquery.com/jquery-1.11.1.min.js"></script>
+    <script src="https://code.jquery.com/jquery-1.11.1.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0-beta2/dist/js/bootstrap.bundle.min.js" integrity="sha384-b5kHyXgcpbZJO/tY9Ul7kGkf1S0CWuKcCD38l8YkeH8z8QjE0GmW1gYU5S9FOnJ0" crossorigin="anonymous"></script>
     <script src="config.js"></script>
     <script src="index.js"></script>
