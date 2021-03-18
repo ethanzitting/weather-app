@@ -1,5 +1,5 @@
 // Get the button element
-const button = document.querySelector('button')
+const button = document.querySelector('#forecastSubmit')
 
 // Make clicking it search for the city in the input cell.
 button.addEventListener('click', async function () {
@@ -18,7 +18,17 @@ async function presentForecast () {
     const cityForecast = await getForecast(cityName)
 
     // Assign that data to the output element in the DOM
-    forecastDisplay.innerHTML = `${cityName}: high of ${cityForecast.day[0].max} and ${cityForecast.day[0].clouds}`
+    forecastDisplay.innerHTML = `City: ${cityForecast.city}<br>
+    Currently: ${cityForecast.days[0].thisDay}, ${cityForecast.currentTemp} F, ${cityForecast.days[0].clouds}<br>
+    `
+    for (let i = 1; i < cityForecast.days.length; i++)  {
+      forecastDisplay.innerHTML += `
+        ${cityForecast.days[i].thisDay}, High: ${cityForecast.days[i].max} F, Low: ${cityForecast.days[i].min} F, ${cityForecast.days[i].clouds}<br>
+      `
+    }
+
+    console.log(cityForecast.days[0].thisDay);
+    console.log(cityForecast);
   } catch (e) {
     console.log(e)
   }
@@ -27,7 +37,7 @@ async function presentForecast () {
 const getForecast = async (inputCity) => {
   // object to store the output
   const responseObject = {
-    day: [
+    days: [
       {},
       {},
       {},
@@ -54,33 +64,34 @@ const getForecast = async (inputCity) => {
     .then((response) => {
       console.log(response);
       // Store the relevant information in the response object
+      const today = new Date();
+      const day = today.getDay();
+      const dayList = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
 
       responseObject.city = inputCity
 
       for (let i = 0; i < 7; i++) {
-        responseObject.day[i].max = (response.daily[i].temp.max - 273.15) * 9 / 5 + 32;
-        responseObject.day[i].min = (response.daily[i].temp.min - 273.15) * 9 / 5 + 32;
-        responseObject.day[i].clouds = response.daily[i].weather[0].description;
-        responseObject.day[i].icon = response.daily[i].weather[0].icon;
-      }
+        let thisDay = day + i;
+        if (thisDay > 6) {
+          thisDay -= 7;
+        }
+        thisDay = dayList[thisDay]
 
-      responseObject.day[0].max = Math.round(
-        ((response.daily[0].temp.max - 273.15) * 9) / 5 + 32
-      )
-      responseObject.current = Math.round(
-        ((response.current.temp - 273.15) * 9) / 5 + 32
-      )
-      responseObject.min = Math.round(
-        ((response.daily[0].temp.min - 273.15) * 9) / 5 + 32
-      )
-      responseObject.clouds = response.daily[0].weather[0].description
+        responseObject.currentTemp = Math.round((response.daily[i].temp.max - 273.15) * 9 / 5 + 32);
+        responseObject.days[i].thisDay = thisDay;
+        responseObject.days[i].max = Math.round((response.daily[i].temp.max - 273.15) * 9 / 5 + 32);
+        responseObject.days[i].min = Math.round((response.daily[i].temp.min - 273.15) * 9 / 5 + 32);
+        responseObject.days[i].clouds = response.daily[i].weather[0].description;
+        responseObject.days[i].icon = response.daily[i].weather[0].icon;
+      }
     })
     // Error handler
     .catch((error) => {
       console.log(error)
     })
+  
+  console.log(responseObject);
 
   // Return the weather data
-  console.log(responseObject)
   return responseObject
 }

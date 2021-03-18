@@ -7,12 +7,17 @@
       name="viewport"
       content="width=device-width, initial-scale=1, maximum-scale=1"
     />
-    
+
     <!-- Favicon url: http://openweathermap.org/img/wn/02d@2x.png-->
+
+
+    <link rel="preconnect" href="https://fonts.gstatic.com">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto">
 
     <!-- Sets CSS-->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0-beta2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-BmbxuPwQa2lc/FVzBcNJ7UAyJxM6wuqIj61tLrc4wSX0szH/Ev+nYRRuWlolflfl" crossorigin="anonymous"/>
     <link href="styles.css" rel="stylesheet">
+
   </head>
 
     
@@ -22,11 +27,31 @@
       Add F and C functionality
       Add Image Outputs for style
       Add loading Icon
+      Dark theme?
     -->
     
     <header>
-      <nav>
+      <nav class="navbar navbar-expand-md navbar-light bg-light sticky-top">
+        <div class="container-fluid">
+          <a href="index.html" class="navbar-brand">Weather App</a>
 
+          <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+          </button>
+
+          <div class="collapse navbar-collapse justify-content-end" id="navbarNav">
+            <ul class="nav navbar-nav ml-auto">
+              <!-- Links for Contact -->
+              <li class="nav-item">
+                <a href="https://github.com/ethanzitting/weather-app" class="nav-link" target="_blank">GitHub Repo</a>
+              </li>
+
+              <li class="nav-item" id="email">
+                <a href="https://ethanzitting.com" class="nav-link" target="_blank">More by Ethan</a>
+              </li>
+            </ul>
+          </div>
+        </a>
       </nav>
     </header>
 
@@ -34,7 +59,7 @@
       <form onsubmit="return false">
         <label for="location">Location:</label>
         <input id="location" />
-        <button>Submit</button>
+        <button id="forecastSubmit">Submit</button>
       </form>
       <div id="forecastDisplay"></div>
     </main>
@@ -44,6 +69,6 @@
     <script src="http://code.jquery.com/jquery-1.11.1.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0-beta2/dist/js/bootstrap.bundle.min.js" integrity="sha384-b5kHyXgcpbZJO/tY9Ul7kGkf1S0CWuKcCD38l8YkeH8z8QjE0GmW1gYU5S9FOnJ0" crossorigin="anonymous"></script>
     <script src="config.js"></script>
-    <script src="index.js" defer></script>
+    <script src="index.js"></script>
   </body>
 </html>
