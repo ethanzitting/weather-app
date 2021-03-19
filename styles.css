@@ -49,3 +49,14 @@ a:hover, a:active, a:visited, a:focus {
   border: none;
   background-color: inherit;
 }
+
+.dark-theme, .dark-theme:hover, .dark-theme:focus {
+  background-color: rgb(30, 30, 30) !important;
+  color: #F3F3F3 !important;
+}
+
+.unit-menu, .unit-menu:hover, .unit-menu:focus,
+.theme-menu, .theme-menu:hover, .theme-menu:focus {
+  background-color: inherit;
+  color: inherit;
+}

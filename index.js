@@ -19,7 +19,7 @@
 let $ = element => document.querySelector(element);
 
 // Capitalizes the first letter of words in the input string
-let toCamelCase = (inputString) => {
+let capitalize = (inputString) => {
   const words = inputString.split(' ');
   for (let i = 0; i < words.length; i++) {
     words[i] = words[i][0].toUpperCase() + words[i].substr(1)
@@ -73,7 +73,7 @@ const toFah = numberInput => Math.round((numberInput - 273.15) * 9 / 5 + 32)
 /* Initial Getting and Setting of Cookies */
 
 // Check if cookies exist for these three vars, adding defauts if not.
-let userUnit = ensureCookie('userUnit', 'F');
+let userUnit = ensureCookie('userUnit', 'fahrenheit');
 let theme = ensureCookie('theme', 'light');
 let recentCity = ensureCookie('recentCity', 'Colorado Springs');
 
@@ -84,7 +84,7 @@ let setTheme = (newTheme) => {
   setCookie('theme', newTheme);
 
   // Change Text Content and Active Status of Menu Buttons Related to Theme
-  $('#theme-display').textContent = toCamelCase(newTheme);
+  $('#theme-display').textContent = capitalize(newTheme);
   if (newTheme === 'light') {
     $('#light-button').classList.add('active')
     $('#dark-button').classList.remove('active')
@@ -102,6 +102,8 @@ let setTheme = (newTheme) => {
     // Change body and input fields
     $('body').classList.remove('dark-theme');
     $('#location').classList.remove('dark-theme');
+    $('.unit-menu').classList.remove('dt-bs');
+    $('.theme-menu').classList.remove('dt-bs');
   } else {
     // Change navbar
     $('nav').classList.remove('navbar-light', 'bg-light');
@@ -110,6 +112,8 @@ let setTheme = (newTheme) => {
     // change body and input fields
     $('body').classList.add('dark-theme');
     $('#location').classList.add('dark-theme');
+    $('.unit-menu').classList.add('dt-bs');
+    $('.theme-menu').classList.add('dt-bs');
   }
 }
 
@@ -148,7 +152,7 @@ $('#forecastSubmit').addEventListener('click', async function () {
       convertTemps();
 
       // Print to DOM
-      await presentForecast(cityForecast)
+      presentForecast(cityForecast)
     } else {
       console.log('failure');
     }
@@ -158,16 +162,38 @@ $('#forecastSubmit').addEventListener('click', async function () {
   $('#location').value = '';
 })
 
+let setPageUnits = async (newUnit) => {
+  // Update unit button on menu
+  $('#unitDisplay').textContent = capitalize(newUnit);
+
+  // Update globar var and cookie
+  userUnit = newUnit;
+  setCookie('userUnit', newUnit);
+
+  // If the user has weather data already present in the program...
+  if (cityForecast) {
+    // Convert it to the userUnit
+    convertTemps();
+
+    // And then print it to DOM
+    presentForecast(cityForecast);
+  }
+
+  if (newUnit === "celsius") {
+    // Update active menu unit button
+    $('#celBtn').classList.add('active');
+    $('#fahBtn').classList.remove('active');
+  } else {
+    // Update active menu unit button
+    $('#fahBtn').classList.add('active');
+    $('#celBtn').classList.remove('active');
+  }
+}
+
 // Fires once on load to build the welcome scren for the user.
 const firstLoad = async () => {
   // Set Units in Header to match cookie
-  if (userUnit === 'F') {
-    $('#unitDisplay').textContent = 'Fahrenheit';
-  } else if (userUnit === 'C') {
-    $('#unitDisplay').textContent = 'Celsius';
-  } else {
-    console.log('Error access userUnit in FirstLoad();');
-  }
+  setPageUnits(userUnit);
 
   // Ask the API for the city weather data
   cityForecast = await getForecast(recentCity);
@@ -176,63 +202,24 @@ const firstLoad = async () => {
   convertTemps();
 
   // Print to DOM
-  await presentForecast(cityForecast)
+  presentForecast(cityForecast)
 }
 
 // Make changing units in menu convert data to correct units to DOM
-$('#fahBtn').addEventListener('click', async () => {
-  if (userUnit === 'C') {
-    // Change fahBtn styling to active
-    $('#fahBtn').classList.add('active');
-    $('#unitDisplay').textContent = 'Fahrenheit';
-    // Change celBtn styling to inactive
-    $('#celBtn').classList.remove('active');
+$('#fahBtn').addEventListener('click', async () => setPageUnits('fahrenheit'));
 
-    // Change userUnit cookie to "F"
-    setCookie('userUnit', 'F');
-    userUnit = 'F';
-
-    // If the user has weather data already present in the program...
-    if (cityForecast) {
-      // Convert it to the userUnit
-      convertTemps();
-
-      // And then print it to DOM
-      await presentForecast(cityForecast);
-    }
-  }
-});
-
-$('#celBtn').addEventListener('click', async () => {
-  // Change celBtn styling to active
-  $('#celBtn').classList.add('active');
-  $('#unitDisplay').textContent = 'Celsius';
-  // Change fahBtn styling to inactive
-  $('#fahBtn').classList.remove('active');
-
-  // Change userUnit cookie to "C"
-  setCookie('userUnit', 'C');
-  userUnit = 'C';
-
-  // If the user has weather data already present in the program...
-  if (cityForecast) {
-    // Convert it to the userUnit
-    convertTemps();
-
-    // And then print it to DOM
-    await presentForecast(cityForecast);
-  }
-})
+$('#celBtn').addEventListener('click', async () => setPageUnits('celsius'));
 
 $('#light-button').addEventListener('click', () => setTheme('light'))
 
 $('#dark-button').addEventListener('click', () => setTheme('dark'))
 
+// Hotfix to fix broken bootstrap hamburger bar
 $('.navbar-toggler').addEventListener('click', () => $('.collapse').classList.toggle('show'));
 
 function convertTemps () {
   // If user has Celsius selected, convert temps from K to C, otherwise convert to F
-  if (getCookie('userUnit') === 'C') {
+  if (getCookie('userUnit') === 'celsius') {
     cityForecast.currentTemp = toCel(cityForecast.currentTempK);
     for (let i = 0; i < cityForecast.days.length; i++) {
       cityForecast.days[i].max = toCel(cityForecast.days[i].maxK);
@@ -248,16 +235,17 @@ function convertTemps () {
 }
 
 // Takes retrieved weather data and displays it in the DOM
-async function presentForecast () {
+function presentForecast () {
   // Clear away the old week forecast data
   $('.week-display').innerHTML = '';
+  const shortUnit = userUnit[0].toUpperCase();
 
   try {
     // Print all the new weather data to the DOM
     $('.current-display').innerHTML = `<h3>${cityForecast.city}, ${cityForecast.country}</h3><br>
     <img src="https://openweathermap.org/img/wn/${cityForecast.days[0].icon}@2x.png" class="current-icon" alt="current weather icon"><br>
-    ${cityForecast.currentTemp}${userUnit} ${cityForecast.days[0].clouds}<br>
-    High: ${cityForecast.days[0].max}${userUnit}<br>Low: ${cityForecast.days[0].min}${userUnit}<br>
+    ${cityForecast.currentTemp}${shortUnit} ${cityForecast.days[0].clouds}<br>
+    High: ${cityForecast.days[0].max}${shortUnit}<br>Low: ${cityForecast.days[0].min}${shortUnit}<br>
     `
     for (let i = 1; i < cityForecast.days.length; i++) {
       $('.week-display').innerHTML += `
@@ -266,7 +254,8 @@ async function presentForecast () {
         <div class="card-body">
           <h5 class="card-title">${cityForecast.days[i].thisDay}</h5>
           <p class="card-subtitle">${cityForecast.days[i].clouds}</p>
-          <p class="card-text">High: ${cityForecast.days[i].max}${userUnit}<br>Low: ${cityForecast.days[i].min}${userUnit}</p>
+          <p class="card-text">High: ${cityForecast.days[i].max}${shortUnit}<br>Low: ${cityForecast.days[i].min}${shortUnit}</p>
+
         </div>
       </div>
       `
@@ -333,7 +322,7 @@ const getForecast = async (inputCity) => {
         // Also process and store the weather data for today and the next 6 days.
         responseObject.days[i].thisDay = thisDay
         responseObject.days[i].icon = response.daily[i].weather[0].icon
-        responseObject.days[i].clouds = toCamelCase(response.daily[i].weather[0].description);
+        responseObject.days[i].clouds = capitalize(response.daily[i].weather[0].description);
 
         // Store numberical data in Kelvin Units
         responseObject.currentTempK = response.current.temp
