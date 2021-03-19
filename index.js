@@ -1,32 +1,55 @@
 /* eslint-disable prefer-const */
 /* eslint-disable semi */
 
+// Table of Contents
+//   - Imports
+//   - Table of Contents
+//   - Utility Functions used by program
+//   - Initial Reading/Setting of Cookies
+//   - Set Theme to match cookies
+//   - Establish City Name Search Field Event Listener
+//   - Load the default city forecast based on the cookies
+//   - Add event listeners to power the menu buttons for theme change
+//   - 
+
+
+/* Utility Functions */
+
+// Standard element finder utility function
+let $ = element => document.querySelector(element);
+
+// Capitalizes the first letter of words in the input string
+let toCamelCase = (inputString) => {
+  const words = inputString.split(' ');
+  for (let i = 0; i < words.length; i++) {
+    words[i] = words[i][0].toUpperCase() + words[i].substr(1)
+  }
+  return words.join(' ');
+}
+
 // Gets a specific cookie from the browser storage and returns it's value alone as a string.
-function getCookie(cname) {
+function getCookie (cname) {
   let name = cname + '=';
   let decodedCookie = decodeURIComponent(document.cookie);
   let ca = decodedCookie.split(';');
-  for (let i = 0; i <ca.length; i++) {
+  for (let i = 0; i < ca.length; i++) {
     let c = ca[i];
-    while (c.charAt(0) == ' ') {
+    while (c.charAt(0) === ' ') {
       c = c.substring(1);
     }
-    if (c.indexOf(name) == 0) {
-      console.log(`Cookie Found.`);
+    if (c.indexOf(name) === 0) {
       return c.substring(name.length, c.length);
     }
   }
-  console.log('Cookie Not Found.');
   return ''
 }
 
 // Creates or overrides a cookie based on your provided inputs.
-function setCookie(cname, cvalue) {
+function setCookie (cname, cvalue) {
   let d = new Date();
   d.setTime(d.getTime() + (600 * 24 * 60 * 60 * 1000));
-  let expires = 'expires='+d.toUTCString();
+  let expires = 'expires=' + d.toUTCString();
   document.cookie = cname + '=' + cvalue + ';' + expires + ';path=/';
-  console.log('Cookie Set.');
 }
 
 // Uses getCoookie and setCookie to check for a cookie's value, and create it if there's not one.
@@ -38,51 +61,86 @@ const ensureCookie = (cname, cvalue) => {
     outputValue = cvalue;
     setCookie(cname, cvalue);
   }
-
   return outputValue;
 }
+
+// Function to convert K to C
+const toCel = numberInput => Math.round(numberInput - 273.15)
+
+// Function to convert K to F
+const toFah = numberInput => Math.round((numberInput - 273.15) * 9 / 5 + 32)
+
+/* Initial Getting and Setting of Cookies */
 
 // Check if cookies exist for these three vars, adding defauts if not.
 let userUnit = ensureCookie('userUnit', 'F');
 let theme = ensureCookie('theme', 'light');
 let recentCity = ensureCookie('recentCity', 'Colorado Springs');
 
-// change classes according to default theme
+// Function to Change Theme of Webpage
+let setTheme = (newTheme) => {
+  // Update cookie and global variable to match new theme
+  theme = newTheme;
+  setCookie('theme', newTheme);
+
+  // Change Text Content and Active Status of Menu Buttons Related to Theme
+  $('#theme-display').textContent = toCamelCase(newTheme);
+  if (newTheme === 'light') {
+    $('#light-button').classList.add('active')
+    $('#dark-button').classList.remove('active')
+  } else {
+    $('#dark-button').classList.add('active')
+    $('#light-button').classList.remove('active')
+  }
+
+  // Change page backgrounds and font colors to match new theme. Defaults to Light Theme
+  if (newTheme === 'light') {
+    // Change navbar
+    $('nav').classList.remove('navbar-dark', 'bg-dark');
+    $('nav').classList.add('navbar-light', 'bg-light');
+
+    // Change body and input fields
+    $('body').classList.remove('dark-theme');
+    $('#location').classList.remove('dark-theme');
+  } else {
+    // Change navbar
+    $('nav').classList.remove('navbar-light', 'bg-light');
+    $('nav').classList.add('navbar-dark', 'bg-dark');
+
+    // change body and input fields
+    $('body').classList.add('dark-theme');
+    $('#location').classList.add('dark-theme');
+  }
+}
+
+setTheme(theme);
 
 // Global scope object for weather data.
 let cityForecast = false;
 
-// Get the button element
-const forecastSubmit = document.querySelector('#forecastSubmit')
-
-// Function to convert K to C
-const toCel = (numberInput) => {
-  return Math.round(numberInput - 273.15)
-}
-
-// Function to convert K to F
-const toFah = (numberInput) => {
-  return Math.round((numberInput - 273.15) * 9 / 5 + 32)
-}
-
 // Make clicking submit search for the city in the input cell.
-forecastSubmit.addEventListener('click', async function () {
-  const cityName = document.querySelector('#location').value
+$('#forecastSubmit').addEventListener('click', async function () {
+  const cityName = $('#location').value
 
+  // If there is a city name in the input field onclick...
   if (cityName) {
+    // Variable to tell if the API call succeeded
     let apiSuccess = false;
-    // Ask the API for the city weather data
+
+    // Ask the API for updated city weather data
     try {
+      // Store the data in cityForecast
       cityForecast = await getForecast(cityName);
       apiSuccess = true;
     } catch {
+      // Error in getForecast();
       apiSuccess = false;
       console.log('Failed to getForecast();');
     }
 
+    // If the API call was successful...
     if (apiSuccess) {
-      console.log(cityForecast);
-      // Update the recentCity cookie and variable
+      // Update the recentCity cookie and global variable
       setCookie('recentCity', cityName);
       recentCity = cityName;
 
@@ -97,16 +155,16 @@ forecastSubmit.addEventListener('click', async function () {
   }
 
   // Reset input field.
-  document.querySelector('#location').value = '';
+  $('#location').value = '';
 })
 
-// Load the default city weather data.
+// Fires once on load to build the welcome scren for the user.
 const firstLoad = async () => {
-  // Set Units in Header
+  // Set Units in Header to match cookie
   if (userUnit === 'F') {
-    document.querySelector('#unitDisplay').textContent = 'Fahrenheit';
+    $('#unitDisplay').textContent = 'Fahrenheit';
   } else if (userUnit === 'C') {
-    document.querySelector('#unitDisplay').textContent = 'Celsius';
+    $('#unitDisplay').textContent = 'Celsius';
   } else {
     console.log('Error access userUnit in FirstLoad();');
   }
@@ -121,26 +179,20 @@ const firstLoad = async () => {
   await presentForecast(cityForecast)
 }
 
-// Make changing units search refresh weather data and print new data in correct units to DOM
-// Get unit DOM elements
-const fahBtn = document.querySelector('#fahBtn');
-const celBtn = document.querySelector('#celBtn');
-const unitDisplay = document.querySelector('#unitDisplay');
-
-fahBtn.addEventListener('click', async () => {
+// Make changing units in menu convert data to correct units to DOM
+$('#fahBtn').addEventListener('click', async () => {
   if (userUnit === 'C') {
     // Change fahBtn styling to active
-    fahBtn.classList.add('active');
-    unitDisplay.textContent = 'Fahrenheit';
+    $('#fahBtn').classList.add('active');
+    $('#unitDisplay').textContent = 'Fahrenheit';
     // Change celBtn styling to inactive
-    celBtn.classList.remove('active');
+    $('#celBtn').classList.remove('active');
 
     // Change userUnit cookie to "F"
     setCookie('userUnit', 'F');
     userUnit = 'F';
 
     // If the user has weather data already present in the program...
-    // Refresh weather data and print it to DOM
     if (cityForecast) {
       // Convert it to the userUnit
       convertTemps();
@@ -151,19 +203,18 @@ fahBtn.addEventListener('click', async () => {
   }
 });
 
-celBtn.addEventListener('click', async () => {
+$('#celBtn').addEventListener('click', async () => {
   // Change celBtn styling to active
-  celBtn.classList.add('active');
-  unitDisplay.textContent = 'Celsius';
+  $('#celBtn').classList.add('active');
+  $('#unitDisplay').textContent = 'Celsius';
   // Change fahBtn styling to inactive
-  fahBtn.classList.remove('active');
+  $('#fahBtn').classList.remove('active');
 
   // Change userUnit cookie to "C"
-  await setCookie('userUnit', 'C');
+  setCookie('userUnit', 'C');
   userUnit = 'C';
 
   // If the user has weather data already present in the program...
-  // Refresh weather data and print it to DOM
   if (cityForecast) {
     // Convert it to the userUnit
     convertTemps();
@@ -172,6 +223,12 @@ celBtn.addEventListener('click', async () => {
     await presentForecast(cityForecast);
   }
 })
+
+$('#light-button').addEventListener('click', () => setTheme('light'))
+
+$('#dark-button').addEventListener('click', () => setTheme('dark'))
+
+$('.navbar-toggler').addEventListener('click', () => $('.collapse').classList.toggle('show'));
 
 function convertTemps () {
   // If user has Celsius selected, convert temps from K to C, otherwise convert to F
@@ -192,20 +249,18 @@ function convertTemps () {
 
 // Takes retrieved weather data and displays it in the DOM
 async function presentForecast () {
-  // Get the value that the user has input
-  const weekDisplay = document.querySelector('.week-display');
-  const currentDisplay = document.querySelector('.current-display')
-  weekDisplay.innerHTML = '';
+  // Clear away the old week forecast data
+  $('.week-display').innerHTML = '';
 
   try {
-    // Print all the relevant data to the DOM
-    currentDisplay.innerHTML = `<h3>${cityForecast.city}, ${cityForecast.country}</h3><br>
+    // Print all the new weather data to the DOM
+    $('.current-display').innerHTML = `<h3>${cityForecast.city}, ${cityForecast.country}</h3><br>
     <img src="https://openweathermap.org/img/wn/${cityForecast.days[0].icon}@2x.png" class="current-icon" alt="current weather icon"><br>
     ${cityForecast.currentTemp}${userUnit} ${cityForecast.days[0].clouds}<br>
     High: ${cityForecast.days[0].max}${userUnit}<br>Low: ${cityForecast.days[0].min}${userUnit}<br>
     `
     for (let i = 1; i < cityForecast.days.length; i++) {
-      weekDisplay.innerHTML += `
+      $('.week-display').innerHTML += `
       <div class="card text-center" style="width: 150px">
         <img src="https://openweathermap.org/img/wn/${cityForecast.days[i].icon}@2x.png" class="card-img-top week-icon" alt="weather icon"/>
         <div class="card-body">
@@ -278,14 +333,7 @@ const getForecast = async (inputCity) => {
         // Also process and store the weather data for today and the next 6 days.
         responseObject.days[i].thisDay = thisDay
         responseObject.days[i].icon = response.daily[i].weather[0].icon
-        responseObject.days[i].clouds = response.daily[i].weather[0].description
-
-        // Capitalize the first letter in every Word
-        const words = responseObject.days[i].clouds.split(' ');
-        for (let j = 0; j < words.length; j++) {
-          words[j] = words[j][0].toUpperCase() + words[j].substr(1)
-        }
-        responseObject.days[i].clouds = words.join(' ');
+        responseObject.days[i].clouds = toCamelCase(response.daily[i].weather[0].description);
 
         // Store numberical data in Kelvin Units
         responseObject.currentTempK = response.current.temp

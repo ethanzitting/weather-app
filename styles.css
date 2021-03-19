@@ -47,4 +47,5 @@ a:hover, a:active, a:visited, a:focus {
 
 .card {
   border: none;
+  background-color: inherit;
 }

@@ -24,25 +24,17 @@
   <body>
     <!--
       TODO
-      Fix broken hamburger bar on mobile
       Allow users to automatically input their location
-      Add loading Icon
-      Dark theme
+      Work out bugs in Dark Theme
+      Final refactoring of code to improve quality and despaghettify.
+      Improve Error Handling in JS
     -->
     
     <header>
-      <nav class="navbar navbar-expand-md navbar-light bg-light sticky-top">
+      <nav class="navbar navbar-expand-md navbar-light sticky-top">
         <div class="container-fluid">
           <a href="index.html" class="navbar-brand">Weather App</a>
-          <li class="nav-item dropdown">
-            <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-              <span id="unitDisplay">Select Unit</span>
-            </a>
-            <ul class="dropdown-menu" aria-labelledby="navbarDropdown">
-              <li><a class="dropdown-item" id="fahBtn" href="#">Fahrenheit</a></li>
-              <li><a class="dropdown-item" id="celBtn" href="#">Celsius</a></li>
-            </ul>
-          </li>
+          
 
           <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
             <span class="navbar-toggler-icon"></span>
@@ -50,6 +42,25 @@
 
           <div class="collapse navbar-collapse justify-content-end" id="navbarNav">
             <ul class="nav navbar-nav ml-auto">
+              <li class="nav-item dropdown dropdown1">
+                <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown1" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                  <span id="unitDisplay">Unit</span>
+                </a>
+                <ul class="dropdown-menu" aria-labelledby="navbarDropdown1">
+                  <li><a class="dropdown-item" id="fahBtn" href="#">Fahrenheit</a></li>
+                  <li><a class="dropdown-item" id="celBtn" href="#">Celsius</a></li>
+                </ul>
+              </li>
+    
+              <li class="nav-item dropdown dropdown2">
+                <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown2" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                  <span id="theme-display">Theme</span>
+                </a>
+                <ul class="dropdown-menu" aria-labelledby="navbarDropdown2">
+                  <li><a class="dropdown-item" id="light-button" href="#">Light</a></li>
+                  <li><a class="dropdown-item" id="dark-button" href="#">Dark</a></li>
+                </ul>
+              </li>
               <!-- Links for Contact -->
               <li class="nav-item">
                 <a href="https://github.com/ethanzitting/weather-app" class="nav-link" target="_blank">GitHub Repo</a>
