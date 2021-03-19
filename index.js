@@ -62,7 +62,7 @@ const toCel = (numberInput) => {
 
 // Function to convert K to F
 const toFah = (numberInput) => {
-  return Math.round(numberInput - 273.15) * 9 / 5 + 32
+  return Math.round((numberInput - 273.15) * 9 / 5 + 32)
 }
 
 // Make clicking submit search for the city in the input cell.
