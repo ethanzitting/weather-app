@@ -67,7 +67,7 @@ const toCel = numberInput => Math.round(numberInput - 273.15)
 // Function to convert K to F
 const toFah = numberInput => Math.round((numberInput - 273.15) * 9 / 5 + 32)
 
-/* Global Variables and Cookies*/
+/* Global Variables and Cookies */
 let cityData = {};
 let cityForecast = { days: [{}, {}, {}, {}, {}, {}, {}] };
 
@@ -162,15 +162,6 @@ let setPageUnits = async (newUnit) => {
   userUnit = newUnit;
   setCookie('userUnit', newUnit);
 
-  // If the user has weather data already present in the program...
-  if (cityForecast) {
-    // Convert it to the userUnit
-    convertTemps(cityForecast);
-
-    // And then print it to DOM
-    presentForecast(cityData, cityForecast);
-  }
-
   if (newUnit === "celsius") {
     // Update active menu unit button
     $('#celBtn').classList.add('active');
@@ -183,9 +174,29 @@ let setPageUnits = async (newUnit) => {
 }
 
 // Make changing units in menu convert data to correct units to DOM
-$('#fahBtn').addEventListener('click', async () => setPageUnits('fahrenheit'));
+$('#fahBtn').addEventListener('click', async () => {
+  setPageUnits('fahrenheit');
+  // If the user has weather data already present in the program...
+  if (cityForecast) {
+    // Convert it to the userUnit
+    convertTemps(cityForecast);
 
-$('#celBtn').addEventListener('click', async () => setPageUnits('celsius'));
+    // And then print it to DOM
+    presentForecast(cityData, cityForecast);
+  }
+});
+
+$('#celBtn').addEventListener('click', async () => {
+  setPageUnits('celsius');
+  // If the user has weather data already present in the program...
+  if (cityForecast) {
+    // Convert it to the userUnit
+    convertTemps(cityForecast);
+
+    // And then print it to DOM
+    presentForecast(cityData, cityForecast);
+  }
+});
 
 $('#light-button').addEventListener('click', () => setTheme('light'))
 
@@ -217,12 +228,16 @@ function presentForecast (cityData, weatherData) {
   // Convert the temps to the user's chosen unit
   convertTemps(cityForecast);
 
+  console.log('Inside presentForecast():');
+  console.log(cityData);
+  console.log(cityForecast);
+
   // Clear away the old week forecast data
   $('.week-display').innerHTML = '';
   const shortUnit = userUnit[0].toUpperCase();
 
   // Print all the new weather data to the DOM
-  $('.current-display').innerHTML = `<h3>${cityData.city}, ${cityData.state}, ${cityData.country}</h3><br>
+  $('.current-display').innerHTML = `<h3>${cityData.city}, ${cityData.country}</h3><br>
   <img src="https://openweathermap.org/img/wn/${weatherData.days[0].icon}@2x.png" class="current-icon" alt="current weather icon"><br>
   ${weatherData.currentTemp}${shortUnit} ${weatherData.days[0].clouds}<br>
   High: ${weatherData.days[0].max}${shortUnit}<br>Low: ${weatherData.days[0].min}${shortUnit}<br>
@@ -239,6 +254,8 @@ function presentForecast (cityData, weatherData) {
     </div>
     `
   }
+
+  console.log('leaving presentForecast()');
 }
 
 // Takes in City String, and returns an object with lat, lon, city, state, and country names.
@@ -251,8 +268,11 @@ const getCityInfoFromCityName = async (inputCity) => {
       // Updat cityData global var
       cityData.lat = response.results[0].geometry.lat;
       cityData.lon = response.results[0].geometry.lng;
-      cityData.city = response.results[0].components.city;
-      cityData.state = response.results[0].components.state_code;
+      if (response.results[0].components.city) {
+        cityData.city = response.results[0].components.city;
+      } else {
+        cityData.city = response.results[0].components.place;
+      }
       cityData.country = response.results[0].components.country_code.toUpperCase();
     })
     .catch(e => console.log(e))
@@ -271,7 +291,6 @@ const getCityInfoFromCoords = async (lat, lon) => {
       cityData.lat = lat;
       cityData.lon = lon;
       cityData.city = response.results[0].components.city;
-      cityData.state = response.results[0].components.state_code;
       cityData.country = response.results[0].components.country_code.toUpperCase();
     })
   return cityData;
@@ -338,6 +357,7 @@ $('#user-location-btn').addEventListener('click', async () => {
 
 // Fires once on load to build the welcome scren for the user.
 const firstLoad = async () => {
+  console.log('Inside firstLoad():')
   // Sets the theme on the page to light or dark
   setTheme(theme);
 
@@ -352,6 +372,8 @@ const firstLoad = async () => {
 
   // Print to DOM
   presentForecast(cityData, cityForecast)
+
+  console.log('Leaving firstLoad()')
 }
 
 firstLoad();
