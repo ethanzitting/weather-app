@@ -25,8 +25,7 @@
     <!--
       TODO
       Allow users to automatically input their location
-      Work out bugs in Dark Theme
-      Improve Error Handling in JS
+      Strengthen the City Search API and Error Hangdling
     -->
     
     <header>
@@ -79,20 +78,21 @@
           <div class="container">
             <form onsubmit="return false">
               <div class="row space-top">
-                <div class="col-1 col-md-3"></div>
-
-                <div class="col-7 col-md-3">
+                <div class="col-0 col-md-3"></div>
+                
+                <div class="col-6 col-md-4">
                   <div class="form-floating mb-5">
                     <input class="form-control" id="location" placeholder="City Name" required/>
                     <label for="location">City Name</label>
                   </div>
                 </div>
 
-                <div class="col-3 col-md-2">
+                <div class="col-6 col-md-2">
                   <button class="btn btn-primary" id="forecastSubmit">Submit</button>
+                  <div class="btn btn-primary" style="height: 38px;" id="user-location-btn"><img style="height: 100%;" src="current-location.png" alt="icon for user's current location"/></div>
                 </div>
 
-                <div class="col-1 col-md-2"></div>
+                <div class="col-0 col-md-3"></div>
               </div>
             </form>
           </div>

@@ -4,13 +4,10 @@
 // Table of Contents
 //   - Imports
 //   - Table of Contents
-//   - Utility Functions used by program
-//   - Initial Reading/Setting of Cookies
-//   - Set Theme to match cookies
-//   - Establish City Name Search Field Event Listener
-//   - Load the default city forecast based on the cookies
-//   - Add event listeners to power the menu buttons for theme change
-//   - 
+//   - Utility Functions
+//   - Global Variables and Cookies
+//   - Build API calls and Event Listeners
+//   - First Load sets page theme, units, and forecast based on cookies.
 
 
 /* Utility Functions */
@@ -70,7 +67,9 @@ const toCel = numberInput => Math.round(numberInput - 273.15)
 // Function to convert K to F
 const toFah = numberInput => Math.round((numberInput - 273.15) * 9 / 5 + 32)
 
-/* Initial Getting and Setting of Cookies */
+/* Global Variables and Cookies*/
+let cityData = {};
+let cityForecast = { days: [{}, {}, {}, {}, {}, {}, {}] };
 
 // Check if cookies exist for these three vars, adding defauts if not.
 let userUnit = ensureCookie('userUnit', 'fahrenheit');
@@ -117,11 +116,6 @@ let setTheme = (newTheme) => {
   }
 }
 
-setTheme(theme);
-
-// Global scope object for weather data.
-let cityForecast = false;
-
 // Make clicking submit search for the city in the input cell.
 $('#forecastSubmit').addEventListener('click', async function () {
   const cityName = $('#location').value
@@ -133,8 +127,9 @@ $('#forecastSubmit').addEventListener('click', async function () {
 
     // Ask the API for updated city weather data
     try {
-      // Store the data in cityForecast
-      cityForecast = await getForecast(cityName);
+      // Update the data in cityData and cityForecast
+      cityData = await getCityInfoFromCityName(cityName);
+      cityForecast = await getForecast(cityData.lat, cityData.lon);
       apiSuccess = true;
     } catch {
       // Error in getForecast();
@@ -148,11 +143,8 @@ $('#forecastSubmit').addEventListener('click', async function () {
       setCookie('recentCity', cityName);
       recentCity = cityName;
 
-      // Convert the temps to the user's chosen unit
-      convertTemps();
-
       // Print to DOM
-      presentForecast(cityForecast)
+      presentForecast(cityData, cityForecast)
     } else {
       console.log('failure');
     }
@@ -173,10 +165,10 @@ let setPageUnits = async (newUnit) => {
   // If the user has weather data already present in the program...
   if (cityForecast) {
     // Convert it to the userUnit
-    convertTemps();
+    convertTemps(cityForecast);
 
     // And then print it to DOM
-    presentForecast(cityForecast);
+    presentForecast(cityData, cityForecast);
   }
 
   if (newUnit === "celsius") {
@@ -188,21 +180,6 @@ let setPageUnits = async (newUnit) => {
     $('#fahBtn').classList.add('active');
     $('#celBtn').classList.remove('active');
   }
-}
-
-// Fires once on load to build the welcome scren for the user.
-const firstLoad = async () => {
-  // Set Units in Header to match cookie
-  setPageUnits(userUnit);
-
-  // Ask the API for the city weather data
-  cityForecast = await getForecast(recentCity);
-
-  // Convert the temps to the user's chosen unit
-  convertTemps();
-
-  // Print to DOM
-  presentForecast(cityForecast)
 }
 
 // Make changing units in menu convert data to correct units to DOM
@@ -217,117 +194,124 @@ $('#dark-button').addEventListener('click', () => setTheme('dark'))
 // Hotfix to fix broken bootstrap hamburger bar
 $('.navbar-toggler').addEventListener('click', () => $('.collapse').classList.toggle('show'));
 
-function convertTemps () {
+// Accesses user cookies to change unit on page to their preferred units.
+function convertTemps (forecastData) {
   // If user has Celsius selected, convert temps from K to C, otherwise convert to F
   if (getCookie('userUnit') === 'celsius') {
-    cityForecast.currentTemp = toCel(cityForecast.currentTempK);
-    for (let i = 0; i < cityForecast.days.length; i++) {
-      cityForecast.days[i].max = toCel(cityForecast.days[i].maxK);
-      cityForecast.days[i].min = toCel(cityForecast.days[i].minK);
+    forecastData.currentTemp = toCel(forecastData.currentTempK);
+    for (let i = 0; i < forecastData.days.length; i++) {
+      forecastData.days[i].max = toCel(forecastData.days[i].maxK);
+      forecastData.days[i].min = toCel(forecastData.days[i].minK);
     }
   } else {
-    cityForecast.currentTemp = toFah(cityForecast.currentTempK);
-    for (let i = 0; i < cityForecast.days.length; i++) {
-      cityForecast.days[i].max = toFah(cityForecast.days[i].maxK);
-      cityForecast.days[i].min = toFah(cityForecast.days[i].minK);
+    forecastData.currentTemp = toFah(forecastData.currentTempK);
+    for (let i = 0; i < forecastData.days.length; i++) {
+      forecastData.days[i].max = toFah(forecastData.days[i].maxK);
+      forecastData.days[i].min = toFah(forecastData.days[i].minK);
     }
   }
 }
 
-// Takes retrieved weather data and displays it in the DOM
-function presentForecast () {
+// Takes retrieved weather data object and displays it in the DOM
+function presentForecast (cityData, weatherData) {
+  // Convert the temps to the user's chosen unit
+  convertTemps(cityForecast);
+
   // Clear away the old week forecast data
   $('.week-display').innerHTML = '';
   const shortUnit = userUnit[0].toUpperCase();
 
-  try {
-    // Print all the new weather data to the DOM
-    $('.current-display').innerHTML = `<h3>${cityForecast.city}, ${cityForecast.country}</h3><br>
-    <img src="https://openweathermap.org/img/wn/${cityForecast.days[0].icon}@2x.png" class="current-icon" alt="current weather icon"><br>
-    ${cityForecast.currentTemp}${shortUnit} ${cityForecast.days[0].clouds}<br>
-    High: ${cityForecast.days[0].max}${shortUnit}<br>Low: ${cityForecast.days[0].min}${shortUnit}<br>
-    `
-    for (let i = 1; i < cityForecast.days.length; i++) {
-      $('.week-display').innerHTML += `
-      <div class="card text-center" style="width: 150px">
-        <img src="https://openweathermap.org/img/wn/${cityForecast.days[i].icon}@2x.png" class="card-img-top week-icon" alt="weather icon"/>
-        <div class="card-body">
-          <h5 class="card-title">${cityForecast.days[i].thisDay}</h5>
-          <p class="card-subtitle">${cityForecast.days[i].clouds}</p>
-          <p class="card-text">High: ${cityForecast.days[i].max}${shortUnit}<br>Low: ${cityForecast.days[i].min}${shortUnit}</p>
-
-        </div>
+  // Print all the new weather data to the DOM
+  $('.current-display').innerHTML = `<h3>${cityData.city}, ${cityData.state}, ${cityData.country}</h3><br>
+  <img src="https://openweathermap.org/img/wn/${weatherData.days[0].icon}@2x.png" class="current-icon" alt="current weather icon"><br>
+  ${weatherData.currentTemp}${shortUnit} ${weatherData.days[0].clouds}<br>
+  High: ${weatherData.days[0].max}${shortUnit}<br>Low: ${weatherData.days[0].min}${shortUnit}<br>
+  `
+  for (let i = 1; i < weatherData.days.length; i++) {
+    $('.week-display').innerHTML += `
+    <div class="card text-center" style="width: 150px">
+      <img src="https://openweathermap.org/img/wn/${weatherData.days[i].icon}@2x.png" class="card-img-top week-icon" alt="weather icon"/>
+      <div class="card-body">
+        <h5 class="card-title">${weatherData.days[i].thisDay}</h5>
+        <p class="card-subtitle">${weatherData.days[i].clouds}</p>
+        <p class="card-text">High: ${weatherData.days[i].max}${shortUnit}<br>Low: ${weatherData.days[i].min}${shortUnit}</p>
       </div>
-      `
-    }
-  } catch (e) {
-    console.log(e)
+    </div>
+    `
   }
 }
 
-// Retrieves weather data from openweathermap and processes it for use.
-const getForecast = async (inputCity) => {
-  // object to store the output data
-  const responseObject = {
-    days: [
-      {},
-      {},
-      {},
-      {},
-      {},
-      {},
-      {}
-    ]
-  }
-
-  // use API call to get lat and lon for input city.
-  await fetch(
-    `https://api.openweathermap.org/data/2.5/weather?q=${inputCity}&appid=${config.weatherAPIKey}`,
-    {
-      mode: 'cors'
-    }
-  )
+// Takes in City String, and returns an object with lat, lon, city, state, and country names.
+const getCityInfoFromCityName = async (inputCity) => {
+  await fetch(`https://api.opencagedata.com/geocode/v1/json?q=${inputCity}&key=e209b80362d0452595badd36722aa189`)
     .then(response => response.json())
     .then((response) => {
-      responseObject.lat = response.coord.lat
-      responseObject.lon = response.coord.lon
-      responseObject.country = response.sys.country
+      console.log('API call made.')
+      console.log(response);
+      // Updat cityData global var
+      cityData.lat = response.results[0].geometry.lat;
+      cityData.lon = response.results[0].geometry.lng;
+      cityData.city = response.results[0].components.city;
+      cityData.state = response.results[0].components.state_code;
+      cityData.country = response.results[0].components.country_code.toUpperCase();
     })
+    .catch(e => console.log(e))
+  console.log(cityData);
+  return cityData;
+}
 
-  // Punch the input city into an API request, using lat and lon
+// Takes in a lat and lon and returns an object with city, state, and country names.
+const getCityInfoFromCoords = async (lat, lon) => {
+  await fetch(`https://api.opencagedata.com/geocode/v1/json?q=${lat}+${lon}&key=e209b80362d0452595badd36722aa189`)
+    .then(response => response.json())
+    .then((response) => {
+      console.log('API call made.')
+      console.log(response);
+      // Update cityData global var
+      cityData.lat = lat;
+      cityData.lon = lon;
+      cityData.city = response.results[0].components.city;
+      cityData.state = response.results[0].components.state_code;
+      cityData.country = response.results[0].components.country_code.toUpperCase();
+    })
+  return cityData;
+}
+
+// Takes in a lat and lon and returns an object with weather data there for today, and this week.
+const getWeatherData = async (lat, lon) => {
+  let outputObject = { days: [{}, {}, {}, {}, {}, {}, {}] };
+
   await fetch(
-    `https://api.openweathermap.org/data/2.5/onecall?lat=${responseObject.lat}&lon=${responseObject.lon}&exclude=hourly&appid=${config.weatherAPIKey}`,
+    `https://api.openweathermap.org/data/2.5/onecall?lat=${lat}&lon=${lon}&exclude=hourly&appid=${config.weatherAPIKey}`,
     {
       mode: 'cors'
     }
   )
     .then(response => response.json())
     .then((response) => {
+      console.log('API call made.')
       // Figure out what today is and store it in a variable.
       const today = new Date()
       const day = today.getDay()
       const dayList = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday']
 
-      // Store input city in response object
-      responseObject.city = inputCity
-
       // Store today's name and the name of the next 6 days in the response object.
       for (let i = 0; i < 7; i++) {
         let thisDay = day + i
-        if (thisDay > 6) {
+        while (thisDay > 6) {
           thisDay -= 7
         }
         thisDay = dayList[thisDay]
 
         // Also process and store the weather data for today and the next 6 days.
-        responseObject.days[i].thisDay = thisDay
-        responseObject.days[i].icon = response.daily[i].weather[0].icon
-        responseObject.days[i].clouds = capitalize(response.daily[i].weather[0].description);
+        outputObject.days[i].thisDay = thisDay
+        outputObject.days[i].icon = response.daily[i].weather[0].icon
+        outputObject.days[i].clouds = capitalize(response.daily[i].weather[0].description);
 
         // Store numberical data in Kelvin Units
-        responseObject.currentTempK = response.current.temp
-        responseObject.days[i].maxK = response.daily[i].temp.max
-        responseObject.days[i].minK = response.daily[i].temp.min
+        outputObject.currentTempK = response.current.temp
+        outputObject.days[i].maxK = response.daily[i].temp.max
+        outputObject.days[i].minK = response.daily[i].temp.min
       }
     })
     // Error handler
@@ -335,8 +319,39 @@ const getForecast = async (inputCity) => {
       console.log(error)
     })
 
-  // Return the weather data
-  return responseObject
+  return outputObject;
+}
+
+// Takes in a lat and lon and returns an object containing weather data
+const getForecast = async (lat, lon) => { return await (getWeatherData(lat, lon)) }
+
+$('#user-location-btn').addEventListener('click', async () => {
+  if (window.navigator.geolocation) {
+    window.navigator.geolocation.getCurrentPosition(async (position) => {
+      let outputObject = await getForecast(position.coords.latitude, position.coords.longitude);
+      console.log(outputObject);
+    }, console.log('Failed to acces user location.'))
+  } else {
+    console.log('window.navigator.geolocation is not present in this browser.');
+  }
+})
+
+// Fires once on load to build the welcome scren for the user.
+const firstLoad = async () => {
+  // Sets the theme on the page to light or dark
+  setTheme(theme);
+
+  // Set Units in Header to match cookie
+  setPageUnits(userUnit);
+
+  // Ask the API for the city data from cokkies
+  cityData = await getCityInfoFromCityName(recentCity);
+
+  // Ask the API for the city weather data from cookies
+  cityForecast = await getForecast(cityData.lat, cityData.lon);
+
+  // Print to DOM
+  presentForecast(cityData, cityForecast)
 }
 
 firstLoad();

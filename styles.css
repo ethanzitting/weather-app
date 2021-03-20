@@ -16,8 +16,9 @@ a:hover, a:active, a:visited, a:focus {
   color: inherit;
 }
 
-#forecastSubmit {
+#forecastSubmit, #user-location-btn {
   margin-top: 6%;
+  margin-right: 10px;
 }
 
 .week-display {
