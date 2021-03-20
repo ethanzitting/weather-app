@@ -15,6 +15,8 @@
 // Standard element finder utility function
 let $ = element => document.querySelector(element);
 
+let error = (err) => console.warn(`ERROR(${err.code}):${err.message}`);
+
 // Capitalizes the first letter of words in the input string
 let capitalize = (inputString) => {
   const words = inputString.split(' ');
@@ -133,8 +135,7 @@ $('#forecastSubmit').addEventListener('click', async function () {
       apiSuccess = true;
     } catch {
       // Error in getForecast();
-      apiSuccess = false;
-      console.log('Failed to getForecast();');
+      error();
     }
 
     // If the API call was successful...
@@ -146,7 +147,7 @@ $('#forecastSubmit').addEventListener('click', async function () {
       // Print to DOM
       presentForecast(cityData, cityForecast)
     } else {
-      console.log('failure');
+      error();
     }
   }
 
@@ -228,10 +229,6 @@ function presentForecast (cityData, weatherData) {
   // Convert the temps to the user's chosen unit
   convertTemps(cityForecast);
 
-  console.log('Inside presentForecast():');
-  console.log(cityData);
-  console.log(cityForecast);
-
   // Clear away the old week forecast data
   $('.week-display').innerHTML = '';
   const shortUnit = userUnit[0].toUpperCase();
@@ -254,8 +251,6 @@ function presentForecast (cityData, weatherData) {
     </div>
     `
   }
-
-  console.log('leaving presentForecast()');
 }
 
 // Takes in City String, and returns an object with lat, lon, city, state, and country names.
@@ -263,8 +258,6 @@ const getCityInfoFromCityName = async (inputCity) => {
   await fetch(`https://api.opencagedata.com/geocode/v1/json?q=${inputCity}&key=e209b80362d0452595badd36722aa189`)
     .then(response => response.json())
     .then((response) => {
-      console.log('API call made.')
-      console.log(response);
       // Updat cityData global var
       cityData.lat = response.results[0].geometry.lat;
       cityData.lon = response.results[0].geometry.lng;
@@ -275,8 +268,7 @@ const getCityInfoFromCityName = async (inputCity) => {
       }
       cityData.country = response.results[0].components.country_code.toUpperCase();
     })
-    .catch(e => console.log(e))
-  console.log(cityData);
+    .catch(e => error(e))
   return cityData;
 }
 
@@ -285,14 +277,13 @@ const getCityInfoFromCoords = async (lat, lon) => {
   await fetch(`https://api.opencagedata.com/geocode/v1/json?q=${lat}+${lon}&key=e209b80362d0452595badd36722aa189`)
     .then(response => response.json())
     .then((response) => {
-      console.log('API call made.')
-      console.log(response);
       // Update cityData global var
       cityData.lat = lat;
       cityData.lon = lon;
       cityData.city = response.results[0].components.city;
       cityData.country = response.results[0].components.country_code.toUpperCase();
     })
+    .catch(e => error(e))
   return cityData;
 }
 
@@ -308,7 +299,6 @@ const getWeatherData = async (lat, lon) => {
   )
     .then(response => response.json())
     .then((response) => {
-      console.log('API call made.')
       // Figure out what today is and store it in a variable.
       const today = new Date()
       const day = today.getDay()
@@ -334,9 +324,7 @@ const getWeatherData = async (lat, lon) => {
       }
     })
     // Error handler
-    .catch((error) => {
-      console.log(error)
-    })
+    .catch((e) => error(e))
 
   return outputObject;
 }
@@ -344,20 +332,28 @@ const getWeatherData = async (lat, lon) => {
 // Takes in a lat and lon and returns an object containing weather data
 const getForecast = async (lat, lon) => { return await (getWeatherData(lat, lon)) }
 
+// Callback to use user-location
+const gcpSuccess = async (position) => {
+  // Get the data for the user position
+  cityData = await getCityInfoFromCoords(position.coords.latitude, position.coords.longitude);
+  cityForecast = await getForecast(cityData.lat, cityData.lon);
+
+  // Update cookie and global var
+  recentCity = cityData.city;
+  setCookie('recentCity', recentCity);
+
+  // Print the data to DOM
+  presentForecast(cityData, cityForecast);
+}
+
 $('#user-location-btn').addEventListener('click', async () => {
   if (window.navigator.geolocation) {
-    window.navigator.geolocation.getCurrentPosition(async (position) => {
-      let outputObject = await getForecast(position.coords.latitude, position.coords.longitude);
-      console.log(outputObject);
-    }, console.log('Failed to acces user location.'))
-  } else {
-    console.log('window.navigator.geolocation is not present in this browser.');
+    window.navigator.geolocation.getCurrentPosition(gcpSuccess, error)
   }
 })
 
 // Fires once on load to build the welcome scren for the user.
 const firstLoad = async () => {
-  console.log('Inside firstLoad():')
   // Sets the theme on the page to light or dark
   setTheme(theme);
 
@@ -372,8 +368,6 @@ const firstLoad = async () => {
 
   // Print to DOM
   presentForecast(cityData, cityForecast)
-
-  console.log('Leaving firstLoad()')
 }
 
 firstLoad();
